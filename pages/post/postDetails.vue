@@ -68,6 +68,11 @@
                         </el-form-item>
                         <input type="button" class="submit" value="提交">
                     </el-form>
+
+                    <!-- 用户评论列表 -->
+                    <el-row class="commntenList">
+                        <commentList></commentList>
+                    </el-row>
                </div>
 
                <!-- 右侧部分 -->
@@ -87,6 +92,7 @@
 import header from "@/components/header.vue"
 import footer from "@/components/footer.vue"
 import relatedPost from "@/components/post/relatedPost.vue"
+import commentList from "@/components/post/commentList.vue"
 export default {
     data () {
         return {
@@ -97,7 +103,7 @@ export default {
         }
     },
     components: {
-        header, footer ,relatedPost
+        header, footer ,relatedPost,commentList
     },
     methods: {
         handlePictureCardPreview () {
