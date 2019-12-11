@@ -94,7 +94,7 @@
 
                <!-- 右侧部分 -->
                <div class="content-right">
-                   <relatedPost></relatedPost>
+                   <relatedPost :data="reList"></relatedPost>
                </div>
         </div>
      
@@ -113,10 +113,11 @@ import commentList from "@/components/post/commentList.vue"
 export default {
     data () {
         return {
-            postRelated:{},
+            postRelated:{},//文章详情数据
             textarea:'',
              dialogImageUrl: '',
-             dialogVisible: false
+             dialogVisible: false,
+             reList:'' //推荐文章列表参数
         }
     },
     components: {
@@ -138,12 +139,33 @@ export default {
     },
     mounted () {
         const id = 5
+        // 文章详情数据请求
         this.$axios({
             url:'/posts',
             params:{ id }
         }).then(res=>{
             console.log(res);
             this.postRelated = res.data.data[0]
+        })
+        // 文章推荐求情
+        this.$axios({
+            url:'/posts/recommend',
+            params:{ id }
+        }).then(res => {
+            console.log(res.data.data.created_at);
+            // this.reList = res.data.data
+             this.reList = res.data.data.map(value => {
+                const data = new Date (value.created_at*1)
+                let year = data.getFullYear()
+                let month = data.getMonth() + 1
+                let day = data.getDate()
+                let time = year + "-" + month + "-" + day
+                return {
+                    ...value,
+                    created_at: time
+                }
+            })
+            console.log(this.reList);
         })
     }
 }

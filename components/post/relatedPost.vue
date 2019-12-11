@@ -3,15 +3,15 @@
       <el-row class="header">
           <p>相关攻略</p>
       </el-row>
-      <a href="javascript:;">
+      <a :href="`/post/postDetails?id=${item.id}`" v-for="(item,index) in data" :key="index">
           <div class="content">
         <div class="info">
             <div class="left">
-                <img src="http://157.122.54.189:9095/uploads/9fab1e29d05245759bf18321b6fbf53c.jpg" alt="">
+                <img :src="item.images[0]" alt="">
             </div>
             <div class="right">
-                <p>大啊啊啊</p>
-                <p>2019-12-11&nbsp;&nbsp;10:42&nbsp;阅读&nbsp;2</p>
+                <p>{{item.title}}</p>
+                <p>{{item.created_at}}&nbsp;阅读&nbsp;{{item.watch}}</p>
             </div>
         </div>
     </div>
@@ -21,7 +21,7 @@
 
 <script>
 export default {
-
+    props: ["data"]
 }   
 </script>
 
@@ -58,9 +58,19 @@ export default {
                     display: flex;
                     flex-direction: column;
                     justify-content: space-between;
+                  
                     p:nth-child(2){
                         font-size: 12px;
                         color: #999;
+                        text-overflow: -o-ellipsis-lastline;
+                    }
+                    p:nth-child(1){
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    line-clamp: 2;
+                    -webkit-box-orient: vertical;
                     }
                 }
             }
