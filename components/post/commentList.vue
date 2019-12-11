@@ -27,7 +27,6 @@ export default {
  .comment{
      padding: 20px 20px 5px 20px !important;
      border: 1px solid #999;
-     width: 1000px;
      border-bottom:  dashed 1px #999;
      .name{
          display: flex;

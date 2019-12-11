@@ -8,14 +8,14 @@
                <!-- 左侧内容部分 -->
                <div class="content-left">
                    <!-- 面包屑导航 -->
-                   <el-row>
+                   <el-row >
                        <el-breadcrumb separator="/">
                             <el-breadcrumb-item :to="{ path: '/post' }">旅游攻略</el-breadcrumb-item>
                             <el-breadcrumb-item>攻略详情</el-breadcrumb-item>
                         </el-breadcrumb>
                    </el-row>
                     <!-- 文章标题 -->
-                    <el-row class="title">
+                    <el-row class="title"style="width:700px;">
                         <h1>远东行：用好奇心打量这座城 —— 最值得收藏的海参崴出行攻略</h1>
                     </el-row>
 
@@ -43,35 +43,52 @@
                     </el-row>
 
                     <!-- 评论部分 -->
-                    <el-form class="comment ">
-                        <p>评论</p>
-                        <el-form-item>
-                            <el-input
-                            type="textarea"
-                            resize="none"
-                            :rows="2"
-                            placeholder="请输入内容"
-                            v-model="textarea">
-                            </el-input>
-                        </el-form-item>
-                        <el-form-item>
-                           <el-upload
-                            action="https://jsonplaceholder.typicode.com/posts/"
-                            list-type="picture-card"
-                            :on-preview="handlePictureCardPreview"
-                            :on-remove="handleRemove">
-                            <i class="el-icon-plus"></i>
-                           </el-upload>
-                            <el-dialog :visible.sync="dialogVisible" size="tiny">
-                            <img width="100%" :src="dialogImageUrl" alt="">
-                            </el-dialog>
-                        </el-form-item>
-                        <input type="button" class="submit" value="提交">
-                    </el-form>
+                    <el-row style="width:700px;">
+                        <el-form class="comment ">
+                                <p>评论</p>
+                                <el-form-item>
+                                    <el-input
+                                    type="textarea"
+                                    resize="none"
+                                    :rows="2"
+                                    placeholder="请输入内容"
+                                    v-model="textarea">
+                                    </el-input>
+                                </el-form-item>
+                                <el-form-item>
+                                <el-upload
+                                    action="https://jsonplaceholder.typicode.com/posts/"
+                                    list-type="picture-card"
+                                    :on-preview="handlePictureCardPreview"
+                                    :on-remove="handleRemove">
+                                    <i class="el-icon-plus"></i>
+                                </el-upload>
+                                    <el-dialog :visible.sync="dialogVisible" size="tiny">
+                                    <img width="100%" :src="dialogImageUrl" alt="">
+                                    </el-dialog>
+                                </el-form-item>
+                                <input type="button" class="submit" value="提交">
+                         </el-form>
+                    </el-row>
 
                     <!-- 用户评论列表 -->
-                    <el-row class="commntenList">
+                    <el-row class="commntenList" style="width:700px;">
                         <commentList></commentList>
+                    </el-row>
+
+                    <!-- 分页部分 -->
+                    <el-row type="flex" style="justify-content:center;width:700px;" >
+                         <div class="block" style="flex:1">
+                            <el-pagination
+                            @size-change="handleSizeChange"
+                            @current-change="handleCurrentChange"
+                            current-page="1"
+                            :page-sizes="[100, 200, 300, 400]"
+                            :page-size="100"
+                            layout="total, sizes, prev, pager, next, jumper"
+                            :total="400">
+                            </el-pagination>
+                        </div>
                     </el-row>
                </div>
 
@@ -111,7 +128,13 @@ export default {
         },
         handleRemove (){
 
-        }
+        },
+      handleSizeChange(val) {
+        console.log(`每页 ${val} 条`);
+      },
+      handleCurrentChange(val) {
+        console.log(`当前页: ${val}`);
+      }
     },
     mounted () {
         const id = 5
@@ -134,7 +157,7 @@ export default {
             width: 1000px;
             margin: 0 auto;
             .content-left{
-                flex: 7;
+                flex: 7 !important;
                 margin-right: 20px;
               .title{
                 padding:20px 0;
@@ -192,6 +215,10 @@ export default {
                             color: #fff;
                         }
                     }
+                }
+                .block{
+                    text-align: center;
+                    padding: 20px 0;
                 }
             }
             .content-right{
