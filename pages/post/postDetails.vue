@@ -16,7 +16,7 @@
                    </el-row>
                     <!-- 文章标题 -->
                     <el-row class="title"style="width:700px;">
-                        <h1>远东行：用好奇心打量这座城 —— 最值得收藏的海参崴出行攻略</h1>
+                        <h1>{{postRelated.title}}</h1>
                     </el-row>
 
                     <!-- 文章详情内容 -->
@@ -26,7 +26,7 @@
                     <el-row type="flex" class="share">
                         <a href="javascript:;" class="share-icon">
                             <i class="el-icon-edit-outline"></i>
-                            <p>评论(100)</p>
+                            <p>评论({{postRelated.comments.length}})</p>
                         </a>
                         <a href="javascript:;" class="share-icon">
                             <i class="el-icon-star-off"></i>
@@ -38,7 +38,7 @@
                         </a>
                         <a href="javascript:;" class="share-icon">
                             <i class="iconfont iconding"></i>
-                            <p>点赞(19)</p>
+                            <p @click="handelLike">点赞({{postRelated.like}})</p>
                         </a>
                     </el-row>
 
@@ -72,8 +72,9 @@
                     </el-row>
 
                     <!-- 用户评论列表 -->
-                    <el-row class="commntenList" style="width:700px;">
-                        <commentList></commentList>
+                    <el-row class="commntenList" style="width:700px; text-align:center;">
+                        <commentList :data="postRelated" v-if="postRelated.comments.length"></commentList>
+                        <div v-else>暂无用户评论</div>
                     </el-row>
 
                     <!-- 分页部分 -->
@@ -113,8 +114,10 @@ import commentList from "@/components/post/commentList.vue"
 export default {
     data () {
         return {
-            postRelated:{},//文章详情数据
-            textarea:'',
+            postRelated:{
+                comments:[]
+            },//文章详情数据
+            textare:'',
              dialogImageUrl: '',
              dialogVisible: false,
              reList:'' //推荐文章列表参数
@@ -124,6 +127,34 @@ export default {
         header, footer ,relatedPost,commentList
     },
     methods: {
+        // 实现点赞功能
+        handelLike () {
+            const id = this.$route.query.id || 5
+            const token = this.$store.state.user.userInfo.token
+            console.log(token);
+            if(token){
+                this.$axios({
+                url:'/posts/like',
+                params:{ id },
+                headers:{
+                    Authorization : "Bearer " +  token
+                },
+                }).then( res => {
+                    this.postRelated.like += 1
+                    console.log(this.postRelated.like);
+                    if(!res.message=="用户已点赞") {
+                        this.postRelated.like += 1
+                    }
+                }).catch(err=>{
+                    console.log(err);
+                })
+            }else {
+                this.$message({
+                    message:'请先登录账号'
+                })
+                this.$router.push({path:"/login"})
+            }
+        },
         handlePictureCardPreview () {
 
         },
@@ -138,22 +169,38 @@ export default {
       }
     },
     mounted () {
-        const id = 5
+        const id = this.$route.query.id || 5
         // 文章详情数据请求
         this.$axios({
             url:'/posts',
             params:{ id }
-        }).then(res=>{
-            console.log(res);
+         }).then(res=>{
             this.postRelated = res.data.data[0]
+            console.log(this.postRelated);
         })
+
+        //     // 发送请求获取文章点赞数据
+        // console.log(this.$store.state.user.userInfo.token);
+        // const token = this.$store.state.user.userInfo.token
+        // console.log(token);
+        // if(token){
+        //     this.$axios({
+        //     url:'/posts/like',
+        //     params:{ id :id*1 },
+        //      Header:{
+        //         Authorization : "Bearer " +  token
+        //     },
+        //     }).then( res => {
+        //         console.log(res);
+        //     })
+        // }
+
         // 文章推荐求情
         this.$axios({
             url:'/posts/recommend',
             params:{ id }
-        }).then(res => {
-            console.log(res.data.data.created_at);
-            // this.reList = res.data.data
+         }).then(res => {
+            // 时间的格式转化毫秒转化为标准时间
              this.reList = res.data.data.map(value => {
                 const data = new Date (value.created_at*1)
                 let year = data.getFullYear()
@@ -165,8 +212,9 @@ export default {
                     created_at: time
                 }
             })
-            console.log(this.reList);
+            // console.log(this.reList);
         })
+    
     }
 }
 </script>
