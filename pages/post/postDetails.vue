@@ -73,7 +73,7 @@
 
                     <!-- 用户评论列表 -->
                     <el-row class="commntenList" style="width:700px; text-align:center;">
-                        <commentList :data="postRelated" v-if="postRelated.comments.length"></commentList>
+                        <commentList :data="commentsList" v-if="postRelated.comments.length"></commentList>
                         <div v-else>暂无用户评论</div>
                     </el-row>
 
@@ -121,7 +121,15 @@ export default {
                 //  follow:'',//回复id
                  post:''//文章id
              },
-             fileList:[]
+             commentsList:{
+                 
+             },
+             PostList:{//获取评论列表的数据参数
+                 post:'',
+                 _sort:'',
+                 _limit:10,
+                 _start:0
+             }
         }
     },
     components: {
@@ -130,7 +138,6 @@ export default {
     methods: {
         // 提交评论
         submitComment () {
-            console.log(123);
             // this.commentDate.follow = this.postRelated.account.id
             this.commentDate.post = this.$route.query.id
             this.commentDate.content = this.textarea
@@ -144,8 +151,11 @@ export default {
                      
                 }
             }).then(res => {
-                console.log(this.postRelated);
-                console.log(res);
+                this.$message({
+                    type:'success',
+                    message:'提交成功'
+                })
+
             })
         },
         // 获取文章详情数据
@@ -173,7 +183,6 @@ export default {
                 },
                 }).then( res => {
                     this.postRelated.like += 1
-                    console.log(this.postRelated.like);
                     if(!res.message=="用户已点赞") {
                         this.postRelated.like += 1
                     }
@@ -192,21 +201,20 @@ export default {
         // file当前上传当个文件的数据
         // fileList多份文件上传的数据
         imgSuccess (response) {
-            console.log(response);
             if(response[0].url){
                 // 存储上传的文件数据
                 this.fileList.push(response[0])
-               this.commentDate.pics.push(response[0].url) 
+               this.commentDate.pics.push(response[0]) 
             }
              
         },
         //删除上传文件时调用
         handleRemove (file, fileList){
             // files删除的文件数据
-            // 剩下未删除的文件数据信息
+            // fileList剩下未删除的文件数据信息
          fileList[0].response.forEach(item => {
              this.commentDate.pics = []
-             this.commentDate.pics.push(item.url)
+             this.commentDate.pics.push(item)
          })
         
         },
@@ -223,8 +231,28 @@ export default {
     },
     mounted () {
         this.getPostDate()
-        // 文章推荐求情
+        
         const id = this.$route.query.id || 5
+        // 实现获取表论列表数据
+          this.PostList.post = id*1
+        this.$axios({
+            url:'/posts/comments',
+            data:this.PostList
+        }).then(res => {
+             this.commentsList = res.data.data.map(value => {
+              const data = new Date (value.created_at*1)
+                let year = data.getFullYear()
+                let month = data.getMonth() + 1
+                let day = data.getDate()
+                let time = year + "-" + month + "-" + day
+                return {
+                    ...value,
+                    created_at: time
+                }
+             })
+            console.log( this.commentsList);
+        })
+        // 文章推荐求情
         this.$axios({
             url:'/posts/recommend',
             params:{ id }
@@ -241,6 +269,7 @@ export default {
                     created_at: time
                 }
             })
+            console.log(this.reList);
         })
     }
 }
@@ -320,6 +349,14 @@ export default {
             }
             .content-right{
                 flex:3;
+            }
+        }
+    }
+    /deep/.content-detail{
+        /deep/p:nth-child(5){
+            img{
+            width: 70px !important;
+            height: 70px !important;
             }
         }
     }
