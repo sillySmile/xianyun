@@ -1,8 +1,6 @@
 <template>
   <div class="main">
       <!-- 头部 -->
-        <header></header>
-
         <!-- 内容部分 -->
         <div class="content">
                <!-- 左侧内容部分 -->
@@ -24,7 +22,7 @@
 
                     <!-- 文章分享部分 -->
                     <el-row type="flex" class="share">
-                        <a href="javascript:;" class="share-icon">
+                        <a href="javascript:;" class="share-icon"  @click="focusState">
                             <i class="el-icon-edit-outline"></i>
                             <p>评论({{postRelated.comments.length}})</p>
                         </a>
@@ -50,22 +48,26 @@
                                     <el-input
                                     type="textarea"
                                     resize="none"
+                                    ref="commentUser"
                                     :rows="2"
                                     placeholder="请输入内容"
                                     v-model="textarea">
                                     </el-input>
                                 </el-form-item>
                                 <el-form-item>
+                                    <!-- action必须是服务器地址的路径 -->
                                 <el-upload
-                                    action="https://jsonplaceholder.typicode.com/posts/"
+                                    action="http://liangwei.tech:1337/upload"
                                     list-type="picture-card"
-                                    :on-preview="handlePictureCardPreview"
+                                    :on-success='imgSuccess'
+                                    name="files"
+                                    multiple
                                     :on-remove="handleRemove">
                                     <i class="el-icon-plus"></i>
                                 </el-upload>
-                                    <el-dialog :visible.sync="dialogVisible" size="tiny">
+                                    <!-- <el-dialog :visible.sync="dialogVisible" size="tiny">
                                     <img width="100%" :src="dialogImageUrl" alt="">
-                                    </el-dialog>
+                                    </el-dialog> -->
                                 </el-form-item>
                                 <input type="button" class="submit" value="提交">
                          </el-form>
@@ -83,7 +85,7 @@
                             <el-pagination
                             @size-change="handleSizeChange"
                             @current-change="handleCurrentChange"
-                            current-page="1"
+                            :current-page="1"
                             :page-sizes="[100, 200, 300, 400]"
                             :page-size="100"
                             layout="total, sizes, prev, pager, next, jumper"
@@ -100,38 +102,60 @@
         </div>
      
 
-      <!-- 底部 -->
-      <footer></footer>
   </div>
 </template>
 
 <script>
 // 引入单组件文件
-import header from "@/components/header.vue"
-import footer from "@/components/footer.vue"
 import relatedPost from "@/components/post/relatedPost.vue"
 import commentList from "@/components/post/commentList.vue"
 export default {
     data () {
         return {
+            // focusState:false,
             postRelated:{
                 comments:[]
             },//文章详情数据
-            textare:'',
-             dialogImageUrl: '',
-             dialogVisible: false,
+            textarea:'',
+            //  dialogImageUrl: '',
+            //  dialogVisible: false,
              reList:'' //推荐文章列表参数
         }
     },
+    // 生命周期存在期间调用
+//      directives: {
+//     focus: {
+//     //根据focusState的状态改变是否聚焦focus
+//       update: function (el, value) {    //第二个参数传进来的是个json
+//       console.log(el); //el是添加v-focus的元素标签
+//       console.log(value);
+//         if (value) {
+//           el.focus()
+//         }
+     
+//      }
+//      }
+//    },
     components: {
-        header, footer ,relatedPost,commentList
+        relatedPost,commentList
     },
     methods: {
+        // 获取token数据
+        getPostDate() {
+              const id = this.$route.query.id || 5
+                // 文章详情数据请求
+                this.$axios({
+                    url:'/posts',
+                    params:{ id }
+                }).then(res=>{
+                    this.postRelated = res.data.data[0]
+                    console.log(this.postRelated);
+                })
+        },
         // 实现点赞功能
         handelLike () {
             const id = this.$route.query.id || 5
-            const token = this.$store.state.user.userInfo.token
-            console.log(token);
+            let token = this.$store.state.user.userInfo.token
             if(token){
                 this.$axios({
                 url:'/posts/like',
@@ -155,11 +179,18 @@ export default {
                 this.$router.push({path:"/login"})
             }
         },
-        handlePictureCardPreview () {
-
+        // 上传文件时调用的函数
+        imgSuccess (response, file, fileList) {
+            console.log(response);
+             console.log(file);
+              console.log(fileList);
         },
         handleRemove (){
-
+           
+        },
+        // 点击评论实现聚集功能
+        focusState () {
+            this.$refs.commentUser.focus()
         },
       handleSizeChange(val) {
         console.log(`每页 ${val} 条`);
@@ -169,33 +200,10 @@ export default {
       }
     },
     mounted () {
-        const id = this.$route.query.id || 5
-        // 文章详情数据请求
-        this.$axios({
-            url:'/posts',
-            params:{ id }
-         }).then(res=>{
-            this.postRelated = res.data.data[0]
-            console.log(this.postRelated);
-        })
-
-        //     // 发送请求获取文章点赞数据
-        // console.log(this.$store.state.user.userInfo.token);
-        // const token = this.$store.state.user.userInfo.token
-        // console.log(token);
-        // if(token){
-        //     this.$axios({
-        //     url:'/posts/like',
-        //     params:{ id :id*1 },
-        //      Header:{
-        //         Authorization : "Bearer " +  token
-        //     },
-        //     }).then( res => {
-        //         console.log(res);
-        //     })
-        // }
+        this.getPostDate()
 
         // 文章推荐求情
+        const id = this.$route.query.id || 5
         this.$axios({
             url:'/posts/recommend',
             params:{ id }
@@ -212,7 +220,6 @@ export default {
                     created_at: time
                 }
             })
-            // console.log(this.reList);
         })
     
     }
