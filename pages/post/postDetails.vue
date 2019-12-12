@@ -42,7 +42,7 @@
 
                     <!-- 评论部分 -->
                     <el-row style="width:700px;">
-                        <el-form class="comment ">
+                        <el-form class="comment">
                                 <p>评论</p>
                                 <el-form-item>
                                     <el-input
@@ -61,15 +61,13 @@
                                     list-type="picture-card"
                                     :on-success='imgSuccess'
                                     name="files"
+                                    :limit="3"
                                     multiple
                                     :on-remove="handleRemove">
                                     <i class="el-icon-plus"></i>
                                 </el-upload>
-                                    <!-- <el-dialog :visible.sync="dialogVisible" size="tiny">
-                                    <img width="100%" :src="dialogImageUrl" alt="">
-                                    </el-dialog> -->
                                 </el-form-item>
-                                <input type="button" class="submit" value="提交">
+                                <input @click="submitComment" type="button" class="submit" value="提交">
                          </el-form>
                     </el-row>
 
@@ -112,35 +110,45 @@ import commentList from "@/components/post/commentList.vue"
 export default {
     data () {
         return {
-            // focusState:false,
             postRelated:{
                 comments:[]
             },//文章详情数据
             textarea:'',
-            //  dialogImageUrl: '',
-            //  dialogVisible: false,
-             reList:'' //推荐文章列表参数
+             reList:'', //推荐文章列表参数
+             commentDate:{
+                 content:'',//评论内容
+                 pics:[],//图片文件数组
+                //  follow:'',//回复id
+                 post:''//文章id
+             },
+             fileList:[]
         }
     },
-    // 生命周期存在期间调用
-//      directives: {
-//     focus: {
-//     //根据focusState的状态改变是否聚焦focus
-//       update: function (el, value) {    //第二个参数传进来的是个json
-//       console.log(el); //el是添加v-focus的元素标签
-//       console.log(value);
-//         if (value) {
-//           el.focus()
-//         }
-     
-//      }
-//      }
-//    },
     components: {
         relatedPost,commentList
     },
     methods: {
-        // 获取token数据
+        // 提交评论
+        submitComment () {
+            console.log(123);
+            // this.commentDate.follow = this.postRelated.account.id
+            this.commentDate.post = this.$route.query.id
+            this.commentDate.content = this.textarea
+            let token = this.$store.state.user.userInfo.token
+            this.$axios({
+                url:"/comments",
+                method:'POST',
+                data:this.commentDate,
+                headers: {
+                     "Authorization" : "Bearer " + token
+                     
+                }
+            }).then(res => {
+                console.log(this.postRelated);
+                console.log(res);
+            })
+        },
+        // 获取文章详情数据
         getPostDate() {
               const id = this.$route.query.id || 5
                 // 文章详情数据请求
@@ -179,14 +187,28 @@ export default {
                 this.$router.push({path:"/login"})
             }
         },
-        // 上传文件时调用的函数
-        imgSuccess (response, file, fileList) {
+        // 上传文件成功时调用的函数
+        // response请求成功时响应回来的结果数据
+        // file当前上传当个文件的数据
+        // fileList多份文件上传的数据
+        imgSuccess (response) {
             console.log(response);
-             console.log(file);
-              console.log(fileList);
+            if(response[0].url){
+                // 存储上传的文件数据
+                this.fileList.push(response[0])
+               this.commentDate.pics.push(response[0].url) 
+            }
+             
         },
-        handleRemove (){
-           
+        //删除上传文件时调用
+        handleRemove (file, fileList){
+            // files删除的文件数据
+            // 剩下未删除的文件数据信息
+         fileList[0].response.forEach(item => {
+             this.commentDate.pics = []
+             this.commentDate.pics.push(item.url)
+         })
+        
         },
         // 点击评论实现聚集功能
         focusState () {
@@ -201,7 +223,6 @@ export default {
     },
     mounted () {
         this.getPostDate()
-
         // 文章推荐求情
         const id = this.$route.query.id || 5
         this.$axios({
@@ -221,7 +242,6 @@ export default {
                 }
             })
         })
-    
     }
 }
 </script>
