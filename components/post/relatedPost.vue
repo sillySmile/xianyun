@@ -5,16 +5,16 @@
       </el-row>
       <a :href="`/post/postDetails?id=${item.id}`" v-for="(item,index) in data" :key="index">
           <div class="content">
-        <div class="info">
-            <div class="left">
-                <img :src="item.images[0]" alt="">
-            </div>
-            <div class="right">
-                <p>{{item.title}}</p>
-                <p>{{item.created_at}}&nbsp;阅读&nbsp;{{item.watch}}</p>
-            </div>
-        </div>
-    </div>
+                <div class="info">
+                    <div class="left">
+                        <img :src="item.images[0]" alt="">
+                    </div>
+                    <div class="right">
+                        <p>{{item.title}}</p>
+                        <p>{{item.created_at}}&nbsp;阅读&nbsp;{{item.watch}}</p>
+                    </div>
+                </div>
+           </div>
       </a>
   </div>
 </template>

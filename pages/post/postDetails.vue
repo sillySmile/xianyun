@@ -57,9 +57,10 @@
                                 <el-form-item>
                                     <!-- action必须是服务器地址的路径 -->
                                 <el-upload
-                                    action="http://liangwei.tech:1337/upload"
+                                    action="http://157.122.54.189:9095/upload"
                                     list-type="picture-card"
                                     :on-success='imgSuccess'
+                                    ref="upload"
                                     name="files"
                                     :limit="3"
                                     multiple
@@ -74,9 +75,11 @@
                     <!-- 用户评论列表 -->
                     <el-row class="commntenList" style="width:700px; text-align:center;">
                         <commentList :data="commentsList" v-if="postRelated.comments.length"></commentList>
-                        <div v-else>暂无用户评论</div>
+                        <div class="loseUser" v-else style="padding:30px 0;border: dashed 1px #999; text-agiln:center;">
+                            <p>暂无评论，赶紧抢占沙发！</p>
+                        </div>
                     </el-row>
-
+                    <input type="hidden" v-model="PostList">
                     <!-- 分页部分 -->
                     <el-row type="flex" style="justify-content:center;width:700px;" >
                          <div class="block" style="flex:1">
@@ -84,10 +87,10 @@
                             @size-change="handleSizeChange"
                             @current-change="handleCurrentChange"
                             :current-page="1"
-                            :page-sizes="[100, 200, 300, 400]"
-                            :page-size="100"
+                            :page-sizes="[2, 4, 6, 8]"
+                            :page-size="PostList._limit"
                             layout="total, sizes, prev, pager, next, jumper"
-                            :total="400">
+                            :total="total">
                             </el-pagination>
                         </div>
                     </el-row>
@@ -110,6 +113,9 @@ import commentList from "@/components/post/commentList.vue"
 export default {
     data () {
         return {
+            pageIndex:1,
+            pageSize:2,
+            total:0,
             postRelated:{
                 comments:[]
             },//文章详情数据
@@ -122,12 +128,12 @@ export default {
                  post:''//文章id
              },
              commentsList:{
-                 
+
              },
              PostList:{//获取评论列表的数据参数
                  post:'',
-                 _sort:'',
-                 _limit:10,
+                 _sort:'reversal',
+                 _limit:2,
                  _start:0
              }
         }
@@ -138,11 +144,11 @@ export default {
     methods: {
         // 提交评论
         submitComment () {
-            // this.commentDate.follow = this.postRelated.account.id
             this.commentDate.post = this.$route.query.id
             this.commentDate.content = this.textarea
             let token = this.$store.state.user.userInfo.token
-            this.$axios({
+            if(this.textarea) {
+                this.$axios({
                 url:"/comments",
                 method:'POST',
                 data:this.commentDate,
@@ -155,8 +161,11 @@ export default {
                     type:'success',
                     message:'提交成功'
                 })
-
+                this.textarea = ""
+                this.$refs.upload.clearFiles();
+                this.getCommentList()
             })
+            }
         },
         // 获取文章详情数据
         getPostDate() {
@@ -167,7 +176,7 @@ export default {
                     params:{ id }
                 }).then(res=>{
                     this.postRelated = res.data.data[0]
-                    console.log(this.postRelated);
+                    
                 })
         },
         // 实现点赞功能
@@ -187,7 +196,7 @@ export default {
                         this.postRelated.like += 1
                     }
                 }).catch(err=>{
-                    console.log(err);
+                    // console.log(err);
                 })
             }else {
                 this.$message({
@@ -196,16 +205,43 @@ export default {
                 this.$router.push({path:"/login"})
             }
         },
+        // 获取评论列表的方法
+        getCommentList () {
+            const id = this.$route.query.id || 5
+            // 实现获取表论列表数据
+            this.PostList.post = id*1
+            this.$axios({
+                url:'/posts/comments',
+                data:this.PostList
+            }).then(res => {
+               let arr = res.data.data.map(value => {
+                const data = new Date (value.created_at*1)
+                    let year = data.getFullYear()
+                    let month = data.getMonth() + 1
+                    let day = data.getDate()
+                    let time = year + "-" + month + "-" + day
+                    return {
+                        ...value,
+                        created_at: time
+                    }
+                })
+                this.total = arr.length
+                let star  = (this.pageIndex - 1) * this.pageSize
+                 let end =  star  + this.pageSize 
+                 this.commentsList = arr.slice(star,end)
+                 
+            })
+        },
         // 上传文件成功时调用的函数
         // response请求成功时响应回来的结果数据
         // file当前上传当个文件的数据
         // fileList多份文件上传的数据
         imgSuccess (response) {
-            if(response[0].url){
                 // 存储上传的文件数据
-                this.fileList.push(response[0])
+                // this.fileList.push(response[0])
+                // console.log(response);
                this.commentDate.pics.push(response[0]) 
-            }
+        
              
         },
         //删除上传文件时调用
@@ -223,35 +259,20 @@ export default {
             this.$refs.commentUser.focus()
         },
       handleSizeChange(val) {
-        console.log(`每页 ${val} 条`);
+        // console.log(`每页 ${val} 条`);
+        this.pageSize = val;
+        this.getCommentList()
       },
       handleCurrentChange(val) {
         console.log(`当前页: ${val}`);
+        this.pageIndex= val
+        this.getCommentList()
       }
     },
     mounted () {
         this.getPostDate()
-        
+        this.getCommentList()
         const id = this.$route.query.id || 5
-        // 实现获取表论列表数据
-          this.PostList.post = id*1
-        this.$axios({
-            url:'/posts/comments',
-            data:this.PostList
-        }).then(res => {
-             this.commentsList = res.data.data.map(value => {
-              const data = new Date (value.created_at*1)
-                let year = data.getFullYear()
-                let month = data.getMonth() + 1
-                let day = data.getDate()
-                let time = year + "-" + month + "-" + day
-                return {
-                    ...value,
-                    created_at: time
-                }
-             })
-            console.log( this.commentsList);
-        })
         // 文章推荐求情
         this.$axios({
             url:'/posts/recommend',
@@ -268,6 +289,7 @@ export default {
                     ...value,
                     created_at: time
                 }
+                
             })
             console.log(this.reList);
         })
@@ -277,6 +299,11 @@ export default {
 
 <style lang="less" scoped>
     .main{
+        /deep/.el-upload{
+            width: 98px;
+            height:98px;
+            line-height: 102px;
+        }
         padding-top: 20px;
         .content{
             display:flex;
@@ -296,7 +323,7 @@ export default {
               .content-details{
                     width: 700px;
                     /deep/img{
-                        width: 100%;
+                        max-width: 100%;
                     }
                 }
                 .share{
