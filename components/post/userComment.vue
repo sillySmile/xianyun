@@ -1,27 +1,63 @@
 <template>
-<div style="border: 1px solid #999;">
-  <div class="userComment" v-for="(item, index) in data" :key="index">
-      <userComment :data="item"></userComment>
+  <div>
+      <div class="userComment">
+    <div class="comment" >
+      <div class="name">
+            <div class="user">
+                <img
+                    class="user_img"
+                    :src="`${$axios.defaults.baseURL}${data.account.defaultAvatar}`"
+                    alt
+                />&nbsp;
+                <span>{{ data.account.nickname }}</span>&nbsp;
+                <span>{{ data.created_at }}</span>
+            </div>
+         <span>1</span>
+      </div>
+      <UserList v-if="data.parent" :data="data.parent"></UserList>
+      <div class="content-img">
+            <p>{{ data.content }}</p>
+            <div class="img">
+               <div v-for="(value, index) in data.pics" :key="index" v-if="value.url">
+                   <img  :src="`${$axios.defaults.baseURL}${value.url}`"   />
+               </div>
+            </div>
+      </div>
+    </div>
+    <span @click.stop="reply(data)">回复</span>
   </div>
-</div>
+  </div>
 </template>
 
 <script>
-import userComment from "@/components/post/userComment.vue"
+// 引入事件总线
+import { EventBus } from "@/components/eventBus.js"
 export default {
-  // name:"UserList",
-  props: ["data"],
-  components: {
-    userComment
-  }
+    name:"UserList",
+    props: ["data"],
+    methods: {
+        reply (data) {
+      EventBus.$emit("reply",data)
+
+      }
+    }
 }
 </script>
 
 <style lang="less" scoped>
-.userComment {
+ .userComment {
   position: relative;
+
   padding: 10px 20px 5px 20px;
+//   margin: 0 20px;
+  background-color: #fff;
+  border: solid 1px #999;
+  /deep/.userComment{
+  position: relative;
+    padding: 10px 10px 5px 10px;
   border-bottom: dashed 1px #999;
+  background-color: #f9f9f9;
+  }
   &:hover{
       >span{
           display: block;

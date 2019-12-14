@@ -50,7 +50,7 @@
                                     resize="none"
                                     ref="commentUser"
                                     :rows="2"
-                                    placeholder="请输入内容"
+                                    :placeholder="placeholder"
                                     v-model="textarea">
                                     </el-input>
                                 </el-form-item>
@@ -74,12 +74,13 @@
 
                     <!-- 用户评论列表 -->
                     <el-row class="commntenList" style="width:700px; text-align:center;">
-                        <commentList :data="commentsList" v-if="postRelated.comments.length"></commentList>
+                        <commentList :data = "commentsList"
+                        v-if="postRelated.comments.length"></commentList>
                         <div class="loseUser" v-else style="padding:30px 0;border: dashed 1px #999; text-agiln:center;">
                             <p>暂无评论，赶紧抢占沙发！</p>
                         </div>
                     </el-row>
-                    <input type="hidden" v-model="PostList">
+
                     <!-- 分页部分 -->
                     <el-row type="flex" style="justify-content:center;width:700px;" >
                          <div class="block" style="flex:1">
@@ -88,7 +89,7 @@
                             @current-change="handleCurrentChange"
                             :current-page="1"
                             :page-sizes="[2, 4, 6, 8]"
-                            :page-size="PostList._limit"
+                            :page-size="pageSize"
                             layout="total, sizes, prev, pager, next, jumper"
                             :total="total">
                             </el-pagination>
@@ -110,9 +111,16 @@
 // 引入单组件文件
 import relatedPost from "@/components/post/relatedPost.vue"
 import commentList from "@/components/post/commentList.vue"
+// 引入事件总线
+import { EventBus } from "@/components/eventBus.js"
 export default {
     data () {
         return {
+            reComment:{
+                account:{}
+            },
+            id:"",
+            placeholder:"请输入内容",
             pageIndex:1,
             pageSize:2,
             total:0,
@@ -124,11 +132,10 @@ export default {
              commentDate:{
                  content:'',//评论内容
                  pics:[],//图片文件数组
-                //  follow:'',//回复id
                  post:''//文章id
              },
              commentsList:{
-
+                 
              },
              PostList:{//获取评论列表的数据参数
                  post:'',
@@ -136,6 +143,14 @@ export default {
                  _limit:2,
                  _start:0
              }
+        }
+    },
+    watch: {
+        reComment () {
+        
+            this.$refs.commentUser.focus()
+            
+            this.reComment = ""
         }
     },
     components: {
@@ -147,7 +162,12 @@ export default {
             this.commentDate.post = this.$route.query.id
             this.commentDate.content = this.textarea
             let token = this.$store.state.user.userInfo.token
+            if(this.id) {
+                this.commentDate.follow = this.id *1
+                this.id = ""
+            }
             if(this.textarea) {
+                console.log(789);
                 this.$axios({
                 url:"/comments",
                 method:'POST',
@@ -165,6 +185,8 @@ export default {
                 this.$refs.upload.clearFiles();
                 this.getCommentList()
             })
+            }else{
+                this.$message("请输入评论信息")
             }
         },
         // 获取文章详情数据
@@ -214,6 +236,7 @@ export default {
                 url:'/posts/comments',
                 data:this.PostList
             }).then(res => {
+                console.log(res);
                let arr = res.data.data.map(value => {
                 const data = new Date (value.created_at*1)
                     let year = data.getFullYear()
@@ -226,10 +249,9 @@ export default {
                     }
                 })
                 this.total = arr.length
-                let star  = (this.pageIndex - 1) * this.pageSize
+                 let star  = (this.pageIndex - 1) * this.pageSize
                  let end =  star  + this.pageSize 
                  this.commentsList = arr.slice(star,end)
-                 
             })
         },
         // 上传文件成功时调用的函数
@@ -238,8 +260,6 @@ export default {
         // fileList多份文件上传的数据
         imgSuccess (response) {
                 // 存储上传的文件数据
-                // this.fileList.push(response[0])
-                // console.log(response);
                this.commentDate.pics.push(response[0]) 
         
              
@@ -264,7 +284,7 @@ export default {
         this.getCommentList()
       },
       handleCurrentChange(val) {
-        console.log(`当前页: ${val}`);
+        // console.log(`当前页: ${val}`);
         this.pageIndex= val
         this.getCommentList()
       }
@@ -292,6 +312,11 @@ export default {
                 
             })
             console.log(this.reList);
+        })
+        EventBus.$on("reply", (item) => {
+            this.placeholder =  "@" + item.account.nickname
+            this.id = item.id
+            this.reComment = item
         })
     }
 }
