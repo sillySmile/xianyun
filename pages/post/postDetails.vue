@@ -26,7 +26,7 @@
                             <i class="el-icon-edit-outline"></i>
                             <p>评论({{postRelated.comments.length}})</p>
                         </a>
-                        <a href="javascript:;" class="share-icon">
+                        <a href="javascript:;" class="share-icon" @click="commentLike">
                             <i class="el-icon-star-off"></i>
                             <p>收藏</p>
                         </a>
@@ -216,6 +216,32 @@ export default {
                     this.postRelated.like += 1
                     if(!res.message=="用户已点赞") {
                         this.postRelated.like += 1
+                    }
+                }).catch(err=>{
+                    // console.log(err);
+                })
+            }else {
+                this.$message({
+                    message:'请先登录账号'
+                })
+                this.$router.push({path:"/login"})
+            }
+        },
+        // 实现收藏功能
+        commentLike() {
+             const id = this.$route.query.id || 5
+            let token = this.$store.state.user.userInfo.token
+            if(token){
+                this.$axios({
+                url:'/posts/star',
+                params:{ id },
+                headers:{
+                    Authorization : "Bearer " +  token
+                },
+                }).then( res => {
+                    this.postRelated.like += 1
+                    if(!res.message=="用户已点赞") {
+                        this.$message("文章收藏成功")
                     }
                 }).catch(err=>{
                     // console.log(err);

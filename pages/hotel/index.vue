@@ -1,81 +1,190 @@
 <template>
-  <div style="padding:20px;">
-    <h2>高德地图实例</h2>
-    <div id="map"></div>
-    <div id="panel"></div>
+  <div class="hotel">
+    <!-- 面包屑部分 -->
+    <div class="bread">
+      <el-breadcrumb separator=">">
+        <el-breadcrumb-item :to="{ path: '/hotel' }">
+          酒店
+        </el-breadcrumb-item>
+        <el-breadcrumb-item>
+          <a href="/">aa</a>
+        </el-breadcrumb-item>
+      </el-breadcrumb>
+    </div>
+    <!-- 筛选部分 -->
+    <div class="shaixuan">
+      <!-- <selectPart /> -->
+    </div>
+    <!-- 地图部分 -->
+    <div class="map">
+      <div class="map-left" flex="3">
+        <div class="area">
+          <div class="title">
+            区域:
+          </div>
+          <div :class="showAllArea?'':'hidden'" class="area-content">
+            <a href>全部</a>
+            <a
+              v-for="(val,index) in scenics"
+              :key="index"
+              href="javascript:;"
+            >&nbsp;{{ val.name }}&nbsp;</a>
+            <br>
+          </div>
+          <span @click="showArea">
+            <i :class="showAllArea?'up':'down'" class="el-icon-d-arrow-right" />等43个区域
+          </span>
+        </div>
+        <div class="method" type="flex" justify="space-between" flex="1">
+          <div class="title">
+            攻略:
+          </div>
+          <div>北京，你想要的都能在这找到。博古通今，兼容并蓄，天下一城，如是帝都。 景点以故宫为中心向四处辐射；地铁便宜通畅，而且覆盖绝大多数景点。 由于早上有天安门升旗仪式，所以大多数人选择在天安门附近住宿。</div>
+        </div>
+        <div class="price">
+          <div class="title">
+            均价:
+          </div>
+          <span>
+            <i class="iconfont iconhuangguan" />
+            <i class="iconfont iconhuangguan" />
+            <i class="iconfont iconhuangguan" />
+            ￥332
+          </span>
+        </div>
+      </div>
+      <div class="map-right" flex="2">
+        2
+      </div>
+    </div>
+    <!-- 酒店筛选列表 -->
+    <hotelList @Allchange="getChangeInfo" />
+    <!-- 酒店列表 -->
+    <hotelitem :allInfo="AllInfo" :changeInfo="changeInfo" />
   </div>
 </template>
 
 <script>
+// import selectPart from '@/components/hotel/select'
+import hotelList from '@/components/hotel/hotelList'
+import hotelitem from '@/components/hotel/hotelitem'
 export default {
-  mounted() {
-    window.onLoad = function() {
-      var map = new AMap.Map("map", {
-        zoom: 30, //级别
-        // 东经北纬
-        center: [113.32459, 23.10668], //中心点坐标
-        viewMode: "3D" //使用3D视图
-      });
-
-      // 点标记*************************
-      var marker = new AMap.Marker({
-        position: [113.32459, 23.10668], //位置
-        // offset: new AMap.Pixel(-10, -10),
-        // icon: "//vdata.amap.com/icons/b18/1/2.png", // 添加 Icon 图标 URL
-        title: "广州塔东方赛达森",
-        content:
-          "<div style='width:100px;height:100px;line-height:100px;text-align:center;border-radius:50%;color:#fff;background:red;'>999</div>"
-      });
-      map.add(marker); //添加到地图
-
-      // 插件添加*************************
-      // AMap.plugin("AMap.ToolBar", function() {
-      AMap.plugin(["AMap.ToolBar", "AMap.Driving"], function() {
-        // 插件不仅仅添加一个,将所有需要的插件都要添加进来
-        //异步加载插件后,回调里面才可以使用这些插件
-        //缩放工具栏插件
-        var toolbar = new AMap.ToolBar();
-        map.addControl(toolbar);
-
-        //驾车路线插件
-        // 这里是官方文档当中的简要例子
-        // var driving = new AMap.Driving(); //驾车路线规划
-        // driving.search(/*参数*/);
-
-        // 创建插件实例
-        var driving = new AMap.Driving({
-          // 驾车路线规划策略，AMap.DrivingPolicy.LEAST_TIME是最快捷模式
-          policy: AMap.DrivingPolicy.LEAST_TIME,
-          map,
-          panel: "panel"
-        });
-
-        var points = [
-          { keyword: "吉山幼儿园", city: "广州" },
-          { keyword: "体育西路", city: "广州" }
-        ];
-
-        driving.search(points, function(status, result) {
-          // 未出错时，result即是对应的路线规划方案
-          console.log(result);
-        });
-      });
-    };
-    var url =
-      "https://webapi.amap.com/maps?v=1.4.15&key=ccd10c501bd6a0ca679f86302d98bb85&callback=onLoad";
-
-    var jsapi = document.createElement("script");
-
-    jsapi.charset = "utf-8";
-    jsapi.src = url;
-    document.head.appendChild(jsapi);
+  components: {
+    hotelList,
+    hotelitem
+  },
+  data () {
+    return {
+      AllInfo: [],
+      scenics: [],
+      showAllArea: false,
+      changeInfo: []
+    }
+  },
+  mounted () {
+    this.$axios({
+      url: '/cities',
+      params: {
+        name: '南京市'
+      }
+    }).then((res) => {
+      // console.log(res.data.data[0])
+      this.scenics = res.data.data[0].scenics
+    })
+    this.$axios({
+      url: '/hotels'
+    }).then((res) => {
+      console.log(res)
+      this.AllInfo = res.data.data
+    })
+  },
+  methods: {
+    showArea () {
+      console.log(1)
+      this.showAllArea = !this.showAllArea
+    },
+    // 获取筛选内容
+    getChangeInfo (data) {
+      console.log(data)
+      console.log(this.AllInfo)
+      // this.changeInfo = data
+      this.changeInfo = this.AllInfo.filter((ele, index) => {
+        data.levels.forEach((val) => {
+          // console.log(ele.hotellevel)
+          if (ele.hotelleve === null) {
+            console.log(index)
+          }
+          if ((ele.hotellevel !== null && ele.hotellevel.id) === val.id) {
+            console.log(1)
+            return this.changeInfo
+          }
+        })
+      })
+      console.log(this.changeInfo)
+    }
   }
-};
+}
 </script>
 
 <style lang="less" scoped>
-#map {
-  width: 480px;
-  height: 360px;
+.hotel {
+  width: 1000px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+.map {
+  display: flex;
+  justify-items: space-between;
+  .map-left {
+    width: 100%;
+  }
+  .map-right {
+    background-color: skyblue;
+    width: 100%;
+  }
+}
+.map {
+  margin-top: 20px;
+  .map-left {
+    .area,
+    .method,
+    .price {
+      margin-bottom: 20px;
+    }
+    .title {
+      width: 12%;
+      float: left;
+      box-sizing: border-box;
+    }
+    .area-content {
+      a:focus {
+        background: #eee;
+        cursor: auto;
+        text-decoration: none;
+        color: #999;
+      }
+      a:first-child {
+        background: #eee;
+        cursor: auto;
+        text-decoration: none;
+        color: #999;
+      }
+    }
+  }
+}
+.down {
+  transform: rotate(90deg);
+  color: orange;
+}
+.up {
+  transform: rotate(270deg);
+  color: orange;
+}
+.hidden {
+  max-height: 3em;
+  overflow: hidden;
+}
+.iconhuangguan {
+  color: orange;
 }
 </style>
