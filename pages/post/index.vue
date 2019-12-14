@@ -1,10 +1,19 @@
 <template>
-  <div>攻略的页面</div>
+  <!-- 记住只能有一个根标签 -->
+  <div>
+    攻略的页面
+   <nuxt-link to="/post/xieyouji">写游记</nuxt-link>
+  </div>
 </template>
 
 <script>
-export default {};
+export default {
+ 
+};
 </script>
 
-<style>
+<style lang='less' scode>
+.goyouji {
+  color: blue;
+}
 </style>
